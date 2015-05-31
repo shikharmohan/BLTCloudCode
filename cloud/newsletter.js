@@ -110,10 +110,10 @@ Parse.Cloud.define("getDeal", function(request, response) {
     Parse.Cloud.useMasterKey();
 
     var query = new Parse.Query("Deal");
-    query.equalTo("objectId", request.params.dealId);
-    query.include('feedback');
+    query.include("feedback");
+    query.include("user");
 
-    query.find({
+    query.get(request.params.dealId, {
         success: function(deal) {
             response.success(deal);
         },
