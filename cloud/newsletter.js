@@ -55,16 +55,20 @@ Parse.Cloud.define("afterDealEmails", function(request, response) {
     // time var
     var current_time = moment().valueOf();
     var all_recipients = "divir94@gmail.com, oskarmelking2015@u.northwestern.edu, matsjohansen2015@u.northwestern.edu, shikhar@u.northwestern.edu, ZacharyAllen2016@u.northwestern.edu, nikhilpai2016@u.northwestern.edu, Dominicwong2014@gmail.com";
-    var test_recipients = "Divir Gupta <divir94@gmail.com>";
 
     deal_query.each(function(deal) {
         var end_time = moment(deal.get("end_utc")).valueOf();
         var email_sent = deal.get("email_sent");
         var num_pushes;
+        var venue = deal.get("venue");
+        var bar_email;
+        if (venue) {
+            var bar_email = venue.get("email");
+        }
 
         // send email if deal ended and email not already sent
-        // if (current_time > end_time && email_sent === undefined) {
-        if (deal.id == "3fDPxh4Dml") {
+        if (current_time > end_time && email_sent === undefined && bar_email) {
+        // if (deal.id == "3fDPxh4Dml") {
             // fill in template
             var html = compiled({
                 "bar_name": deal.get("venue").get("bar_name"),
@@ -77,7 +81,7 @@ Parse.Cloud.define("afterDealEmails", function(request, response) {
 
             // send message
             Parse.Cloud.run('sendEmail', {
-                to: "divir94@gmail.com",
+                to: bar_email,
                 subject: "Hello from BarLift!",
                 html: html
             }, {
