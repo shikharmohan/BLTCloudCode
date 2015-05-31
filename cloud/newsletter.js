@@ -1,13 +1,13 @@
 var moment = require("moment"); // current time
 var mailgun = require("mailgun"); // sending emails
-var _ = require('underscore');  // email templating
+var _ = require('underscore'); // email templating
 var fs = require('fs');
 
 // initialze mailgun with domain and API key
 mailgun.initialize("sandbox6d7935d6b6fa46cb830bde2511060cc8.mailgun.org", "key-6bc3fad9806ac814453c3dcb3704dd99");
 
 // compile template
-var template = fs.readFileSync("cloud/views/deal_email.js","utf8");
+var template = fs.readFileSync("cloud/views/deal_email.js", "utf8");
 var compiled = _.template(template);
 
 Parse.Cloud.define("sendEmail", function(request, response) {
@@ -50,7 +50,7 @@ Parse.Cloud.define("afterDealEmails", function(request, response) {
 
     // query for all deals including users
     var deal_query = new Parse.Query("Deal");
-    deal_query.include("user");
+    deal_query.include("venue");
 
     // time var
     var current_time = moment().valueOf();
@@ -64,18 +64,16 @@ Parse.Cloud.define("afterDealEmails", function(request, response) {
 
         // send email if deal ended and email not already sent
         // if (current_time > end_time && email_sent === undefined) {
-        if (deal.id == "bbX4swPeGA") {
+        if (deal.id == "3fDPxh4Dml") {
             // fill in template
-            var html = compiled(
-                {
-                   "bar_name": deal.get("user").get("bar_name"),
-                   "deal_name": deal.get("name"),
-                   "deal_start_date": moment(deal.get("deal_start_date").toString()).local().format("dddd, MMMM Do YYYY"),
-                   "deal_start_time": moment(deal.get("deal_start_date").toString()).local().format("ha, MMMM Do YYYY"),
-                   "deal_url": 'http://barliftdev.herokuapp.com/#/bar_feedback/' + deal.id,
-                   "pushes_sent": 672
-                }
-            );
+            var html = compiled({
+                "bar_name": deal.get("venue").get("bar_name"),
+                "deal_name": deal.get("name"),
+                "deal_start_date": moment(deal.get("deal_start_date").toString()).local().format("dddd, MMMM Do YYYY"),
+                "deal_start_time": moment(deal.get("deal_start_date").toString()).local().format("ha, MMMM Do YYYY"),
+                "deal_url": 'http://barliftdev.herokuapp.com/feedback/' + deal.id,
+                "pushes_sent": 846
+            });
 
             // send message
             Parse.Cloud.run('sendEmail', {
@@ -111,14 +109,35 @@ Parse.Cloud.define("getDeal", function(request, response) {
 
     var query = new Parse.Query("Deal");
     query.include("feedback");
-    query.include("user");
+    query.include("venue");
 
     query.get(request.params.dealId, {
         success: function(deal) {
             response.success(deal);
         },
         error: function(error) {
-            response.error("Query failed.");
+            response.error("Query failed", error);
+        }
+    });
+});
+
+Parse.Cloud.define("updateDealFeedback", function(request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var query = new Parse.Query("Deal");
+
+    query.get(request.params.dealId, {
+        success: function(deal) {
+            deal.set("feedback", {
+                objectId: request.params.feedbackId,
+                __type: "Pointer",
+                className: "Feedback"
+            });
+            deal.save();
+            response.success(deal);
+        },
+        error: function(error) {
+            response.error("Query failed", error);
         }
     });
 });
