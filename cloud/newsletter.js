@@ -75,7 +75,7 @@ Parse.Cloud.define("afterDealEmails", function(request, response) {
                 "deal_name": deal.get("name"),
                 "deal_start_date": moment(deal.get("deal_start_date").toString()).local().format("dddd, MMMM Do YYYY"),
                 "deal_start_time": moment(deal.get("deal_start_date").toString()).local().format("ha, MMMM Do YYYY"),
-                "deal_url": 'http://barliftdev.herokuapp.com/feedback/' + deal.id,
+                "deal_url": 'http://barlift.herokuapp.com/feedback/' + deal.id,
                 "pushes_sent": 846
             });
 
